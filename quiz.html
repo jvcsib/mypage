@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Bee</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f9f4f9; /* Pastel pink background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+        }
+        .container {
+            display: grid;
+            grid-template-rows: 10fr auto;
+            max-width: 100%;
+            max-height: 100%;
+            width: 700px;
+            height: 350px;
+            padding: 50px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .question {
+            font-size: 40px;
+            margin-bottom: 20px;
+            color: #6a0dad; /* Purple text */
+        }
+        .options {
+            list-style-type: none;
+            padding: 0;
+        }
+        .options li {
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 30px;
+            cursor: pointer;
+            background-color: #d3a6d8; /* Pastel purple button background */
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+        }
+        button1 {
+            grid-row: 10;
+            padding: 10px 35px;
+            font-size: 15px;
+            cursor: pointer;
+            background-color: #d3a6d8; /* Pastel purple button background */
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+        }
+        button:hover {
+            background-color: #c78dd4; /* Slightly darker pastel purple on hover */
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .correct {
+            color: #6a0dad; /* Purple text for correct answer */
+        }
+        .incorrect {
+            color: #d36c6c; /* Pastel pink text for incorrect answer */
+        }
+        .score {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #6a0dad; /* Purple text for score */
+        }
+        .hidden {
+            display: none;
+        }
+        .spacer {
+            height: 100px; /* Adjust the height to control the amount of space */
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="score" id="score">Score: 0</div>
+        <div class="question" id="question"></div>
+        <ul class="options" id="options"></ul>
+        <div class="result" id="result"></div>
+        <button id="try-again" class="hidden" onclick="restartQuiz()">Try Again</button>
+        <div class="spacer"></div>
+        <div class="spacer"></div>
+        <div class="spacer"></div>
+        <button1 id="hint" onclick="showHint()">Hint</button>
+    </div>
+
+    <script>
+        const allQuestions = [
+            { question: 'あける', answers: ['Transitive', 'Intransitive'], correct: 0, hint: '英語で；to open' },
+            { question: 'しめる', answers: ['Transitive', 'Intransitive'], correct: 0, hint: '英語で；to close' },
+            { question: 'いれる', answers: ['Transitive', 'Intransitive'], correct: 0, hint: '英語で；to enter or to put in' },
+            { question: 'だす', answers: ['Transitive', 'Intransitive'], correct: 0, hint: '英語で；to put out' },
+            { question: 'とめる', answers: ['Transitive', 'Intransitive'], correct: 0, hint: '英語で；to stop' },
+            { question: 'ならべる', answers: ['Transitive', 'Intransitive'], correct: 0, hint: '英語で；to line up or to arrange' },
+            { question: 'はじめる', answers: ['Transitive', 'Intransitive'], correct: 0, hint: '英語で；to begin' },
+            { question: 'つける', answers: ['Transitive', 'Intransitive'], correct: 0, hint: '英語で；to switch/turn on' },
+            { question: 'けす', answers: ['Transitive', 'Intransitive'], correct: 0, hint: '英語で；to switch/turn off' },
+            { question: 'うごかす', answers: ['Transitive', 'Intransitive'], correct: 0, hint: '英語で；to move' },
+            { question: 'あく', answers: ['Transitive', 'Intransitive'], correct: 1, hint: '英語で；to open' },
+            { question: 'しまる', answers: ['Transitive', 'Intransitive'], correct: 1, hint: '英語で；to close' },
+            { question: 'はいる', answers: ['Transitive', 'Intransitive'], correct: 1, hint: '英語で；to enter or to put in' },
+            { question: 'でる', answers: ['Transitive', 'Intransitive'], correct: 1, hint: '英語で；to put out' },
+            { question: 'とまる', answers: ['Transitive', 'Intransitive'], correct: 1, hint: '英語で；to stop' },
+            { question: 'ならぶ', answers: ['Transitive', 'Intransitive'], correct: 1, hint: '英語で；to line up or to arrange.' },
+            { question: 'はじまる', answers: ['Transitive', 'Intransitive'], correct: 1, hint: '英語で；to begin' },
+            { question: 'つく', answers: ['Transitive', 'Intransitive'], correct: 1, hint: '英語で；to switch/turn on' },
+            { question: 'きえる', answers: ['Transitive', 'Intransitive'], correct: 1, hint: '英語で；to switch/turn off' },
+            { question: 'うごく', answers: ['Transitive', 'Intransitive'], correct: 1, hint: '英語で；to move' },
+        ];
+
+        function getRandomQuestions(pool, num) {
+            const shuffled = pool.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, num);
+        }
+
+        let questions = getRandomQuestions(allQuestions, 10);
+        let currentQuestion = 0;
+        let score = 0;
+
+        function displayQuestion() {
+            const question = questions[currentQuestion];
+            document.getElementById('question').textContent = question.question;
+            const options = document.getElementById('options');
+            options.innerHTML = '';
+            question.answers.forEach((answer, index) => {
+                options.innerHTML += `<li><button onclick="checkAnswer(${index})">${answer}</button></li>`;
+            });
+            document.getElementById('hint').classList.remove('hidden'); // Show the Hint button
+        }
+
+        function checkAnswer(selectedIndex) {
+            const question = questions[currentQuestion];
+            const resultDiv = document.getElementById('result');
+            if (selectedIndex === question.correct) {
+                resultDiv.textContent = 'Correct!';
+                resultDiv.className = 'result correct';
+                score++;
+            } else {
+                resultDiv.textContent = 'Incorrect. The correct answer is ' + question.answers[question.correct] + '.';
+                resultDiv.className = 'result incorrect';
+            }
+
+            updateScore(); // Update score display
+            setTimeout(nextQuestion, 1000); // Move to the next question after 1 second
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                displayQuestion();
+                document.getElementById('result').textContent = '';
+            } else {
+                document.getElementById('question').textContent = `Quiz completed! Your final score is ${score} out of ${questions.length}.`;
+                document.getElementById('options').innerHTML = '';
+                document.getElementById('result').style.display = 'none';
+                document.getElementById('try-again').classList.remove('hidden'); // Show the Try Again button
+                document.getElementById('hint').classList.add('hidden'); // Hide the Hint button
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = `Score: ${score}`;
+        }
+
+        function showHint() {
+            const hint = questions[currentQuestion].hint;
+            document.getElementById('result').textContent = `Hint: ${hint}`;
+            document.getElementById('result').className = 'result'; // Reset class for hint styling
+        }
+
+        function restartQuiz() {
+            questions = getRandomQuestions(allQuestions, 10); // Get new set of questions
+            currentQuestion = 0;
+            score = 0;
+            updateScore();
+            document.getElementById('result').textContent = '';
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('try-again').classList.add('hidden'); // Hide the Try Again button
+            document.getElementById('hint').classList.remove('hidden'); // Show the Hint button
+            displayQuestion();
+        }
+
+        // Initialize the quiz
+        displayQuestion();
+        updateScore(); // Initialize score display
+    </script>
+</body>
+</html>
